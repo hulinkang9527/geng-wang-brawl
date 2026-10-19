@@ -1,0 +1,11 @@
+# 思路视频与分析素材（不入库，体积过大）
+思路视频.mp4
+思路视频.mp3
+analysis_frames/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/

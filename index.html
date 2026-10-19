@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>梗王大乱斗 · 在线梗角色格斗</title>
+<link rel="icon" href="assets/favicon.svg" />
+<link rel="stylesheet" href="css/style.css" />
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- ================= UI 覆盖层 ================= -->
+  <div id="ui">
+
+    <!-- 主菜单 -->
+    <section class="screen active" id="screen-menu">
+      <div class="menu-topbar">
+        <div class="brand-pill"><span class="dot-live"></span>联机大厅在线</div>
+        <div class="topbar-btns">
+          <button class="ghost-btn" id="btn-sound" title="声音开关">🔊</button>
+          <button class="ghost-btn" id="btn-fullscreen" title="全屏">⛶ 全屏</button>
+        </div>
+      </div>
+      <div class="menu-body">
+        <div class="menu-left">
+          <div class="game-logo">
+            <div class="logo-sub">MEME BRAWL · 网络热梗格斗</div>
+            <h1 class="logo-title">梗王<br>大乱斗</h1>
+            <p class="logo-desc">热梗角色网上互殴，冷梗热梗齐上阵，<br>看谁笑到最后。</p>
+          </div>
+        </div>
+        <div class="menu-right">
+          <div class="mode-panel">
+            <div class="panel-title"><span class="en">SELECT MODE</span> 选择模式</div>
+            <ul class="mode-list">
+              <li data-mode="online">
+                <span class="mode-no">01</span>
+                <span class="mode-name">在线联机<small>好友房间 · 实时互殴</small></span>
+                <span class="mode-arrow">↗</span>
+              </li>
+              <li data-mode="arcade" class="selected">
+                <span class="mode-no">02</span>
+                <span class="mode-name">单人街机<small>打电脑 · 打不过多打两局</small></span>
+                <span class="mode-arrow">↗</span>
+              </li>
+              <li data-mode="versus">
+                <span class="mode-no">03</span>
+                <span class="mode-name">本地双人<small>同一键盘 · 互相伤害</small></span>
+                <span class="mode-arrow">↗</span>
+              </li>
+              <li data-mode="training">
+                <span class="mode-no">04</span>
+                <span class="mode-name">招式训练<small>无限能量 · 练到会为止</small></span>
+                <span class="mode-arrow">↗</span>
+              </li>
+            </ul>
+            <div class="panel-foot"><span>↑↓ 选择 · Enter 进入 · 鼠标点击也可以</span><span class="ver">v1.0.0</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 在线联机 -->
+    <section class="screen" id="screen-online">
+      <div class="online-box">
+        <h2 class="screen-title">在线联机</h2>
+        <p class="screen-sub">WebRTC 直连对战，免费且无需注册；请把房间号发给朋友。</p>
+        <div class="online-actions">
+          <button class="big-btn" id="btn-create-room">创建房间</button>
+          <div class="online-join">
+            <input id="room-input" maxlength="6" inputmode="numeric" placeholder="输入6位房间号" />
+            <button class="big-btn outline" id="btn-join-room">加入</button>
+          </div>
+        </div>
+        <div class="online-status" id="online-status">空闲</div>
+        <button class="text-btn" data-back-menu>← 返回主菜单</button>
+      </div>
+    </section>
+
+    <!-- 选角 -->
+    <section class="screen" id="screen-charselect">
+      <div class="cs-header">
+        <div class="cs-title"><span class="en">PICK YOUR MEME</span><h2 id="cs-title-main">你，选一个角色</h2><small id="cs-title-sub">单人街机 · 打不过就多打两局</small></div>
+        <div class="cs-turn" id="cs-turn"></div>
+      </div>
+      <div class="cs-cards" id="cs-cards"></div>
+      <div class="cs-footer">
+        <button class="ghost-btn" id="btn-random">🎲 随机选人</button>
+        <button class="ghost-btn" id="btn-clear-pick">重新选择</button>
+        <button class="big-btn" id="btn-fight" disabled>开打！</button>
+        <button class="text-btn" data-back-menu>返回</button>
+      </div>
+    </section>
+
+    <!-- 战斗 HUD -->
+    <section class="screen hud" id="screen-hud">
+      <div class="hud-top">
+        <div class="hud-side left">
+          <div class="hud-portrait" id="hud-p1-portrait"></div>
+          <div class="hud-bars">
+            <div class="hud-name"><span id="hud-p1-name">奶蛙</span><span class="hud-tag" id="hud-p1-tag">P1</span></div>
+            <div class="bar hp"><div class="bar-fill hp-fill" id="hud-p1-hp"></div><div class="bar-ghost" id="hud-p1-hp-ghost"></div></div>
+            <div class="bar shield"><div class="bar-fill shield-fill" id="hud-p1-shield"></div></div>
+            <div class="bar energy"><div class="bar-fill energy-fill" id="hud-p1-energy"></div><span class="energy-label" id="hud-p1-energy-label"></span></div>
+          </div>
+        </div>
+        <div class="hud-center">
+          <div class="round-label" id="hud-round">ROUND 1</div>
+          <div class="timer" id="hud-timer">75</div>
+          <div class="wins"><span id="hud-p1-wins"></span><span class="wins-vs">VS</span><span id="hud-p2-wins"></span></div>
+        </div>
+        <div class="hud-side right">
+          <div class="hud-bars align-right">
+            <div class="hud-name"><span class="hud-tag cpu" id="hud-p2-tag">CPU</span><span id="hud-p2-name">奶蛙</span></div>
+            <div class="bar hp"><div class="bar-fill hp-fill enemy" id="hud-p2-hp"></div><div class="bar-ghost enemy" id="hud-p2-hp-ghost"></div></div>
+            <div class="bar shield"><div class="bar-fill shield-fill" id="hud-p2-shield"></div></div>
+            <div class="bar energy"><div class="bar-fill energy-fill" id="hud-p2-energy"></div><span class="energy-label" id="hud-p2-energy-label"></span></div>
+          </div>
+          <div class="hud-portrait" id="hud-p2-portrait"></div>
+        </div>
+      </div>
+
+      <div class="combo-layer">
+        <div class="combo left" id="combo-p1"></div>
+        <div class="combo right" id="combo-p2"></div>
+      </div>
+
+      <!-- 键位提示（PC） -->
+      <div class="keytip" id="keytip-p1">
+        <span><kbd>A</kbd><kbd>D</kbd>移动</span><span><kbd>W</kbd>跳跃</span><span><kbd>J</kbd>轻拳</span><span><kbd>K</kbd>重击</span><span><kbd>L</kbd>护盾</span><span><kbd>Shift</kbd>闪避</span><span><kbd>U</kbd>必杀</span><span><kbd>I</kbd>爆气/大必杀</span>
+      </div>
+      <div class="keytip p2" id="keytip-p2">
+        <span><kbd>←</kbd><kbd>→</kbd>移动</span><span><kbd>↑</kbd>跳跃</span><span><kbd>1</kbd>轻拳</span><span><kbd>2</kbd>重击</span><span><kbd>3</kbd>护盾</span><span><kbd>RShift</kbd>闪避</span><span><kbd>4</kbd>必杀</span><span><kbd>5</kbd>爆气</span>
+      </div>
+
+      <button class="hud-pause" id="btn-pause">⏸</button>
+    </section>
+
+    <!-- 大字横幅（ROUND/FIGHT/KO/TIME UP） -->
+    <div class="big-banner" id="big-banner"></div>
+    <!-- 大必杀全屏演出 -->
+    <div class="ultra-overlay" id="ultra-overlay"><div class="ultra-inner"><div class="ultra-cn" id="ultra-cn"></div><div class="ultra-en" id="ultra-en"></div></div></div>
+
+    <!-- 暂停 -->
+    <section class="screen modal" id="screen-pause">
+      <div class="dialog">
+        <h3 id="pause-title">暂停</h3>
+        <div class="dialog-btns">
+          <button class="big-btn" id="btn-resume">继续</button>
+          <button class="big-btn outline" id="btn-quit">退出对局</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 退出确认 -->
+    <section class="screen modal" id="screen-quit-confirm">
+      <div class="dialog">
+        <h3>真要走？</h3>
+        <p class="dialog-sub">这局还没打完呢</p>
+        <div class="dialog-btns">
+          <button class="big-btn" id="btn-confirm-quit">退出对局</button>
+          <button class="big-btn outline" id="btn-cancel-quit">再打一会儿</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 结算 -->
+    <section class="screen" id="screen-result">
+      <div class="result-box">
+        <div class="result-title" id="result-title">K.O.</div>
+        <div class="result-winner" id="result-winner"></div>
+        <div class="result-score" id="result-score"></div>
+        <div class="dialog-btns">
+          <button class="big-btn" id="btn-rematch">🔁 再来一局</button>
+          <button class="big-btn outline" id="btn-back-menu">返回主菜单</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 训练模式辅助 -->
+    <div class="train-bar" id="train-bar">训练模式：能量无限 · <kbd>R</kbd> 重置站位 · <kbd>H</kbd> 切换假人行为（<span id="train-dummy-mode">站立</span>）</div>
+
+    <!-- 触屏控件 -->
+    <div class="touch-layer" id="touch-layer">
+      <div class="touch-jump" id="btn-touch-jump">跳</div>
+      <div class="touch-pad" id="touch-pad"><div class="touch-stick" id="touch-stick"></div></div>
+      <div class="touch-btns">
+        <button class="tbtn small" data-act="dodge">闪</button>
+        <button class="tbtn small" data-act="block">盾</button>
+        <button class="tbtn special" data-act="special">必</button>
+        <button class="tbtn ultra" data-act="ultra">爆</button>
+        <button class="tbtn heavy" data-act="heavy">重</button>
+        <button class="tbtn light" data-act="light">拳</button>
+      </div>
+    </div>
+
+    <!-- 竖屏提示 -->
+    <div class="rotate-tip" id="rotate-tip">
+      <div class="rotate-icon">📱↻</div>
+      <p>请横屏游玩</p>
+    </div>
+
+    <!-- 轻提示 -->
+    <div class="toast" id="toast"></div>
+  </div>
+
+  <!-- PeerJS（仅在线联机使用） -->
+  <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
