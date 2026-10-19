@@ -126,7 +126,13 @@ geng-wang-brawl/
 
 ## 部署
 
-推送到 GitHub 后：仓库 **Settings → Pages → Source 选 `main` 分支根目录 `/ (root)`**，等一两分钟即可访问。
+仓库已配置 GitHub Actions 自动部署（见 `.github/workflows/deploy.yml`）：
+
+- 每次向 `main` 分支推送代码，会自动构建并发布到 GitHub Pages
+- 首次启用需：仓库 **Settings → Pages → Build and deployment → Source 选择 "GitHub Actions"**
+- 部署成功后访问 `https://<你的用户名>.github.io/<仓库名>/`
+
+工作流使用官方 `actions/upload-pages-artifact` + `actions/deploy-pages`，无需构建，直接把当前目录静态文件发布；无需安装任何依赖。
 
 ## 说明
 
