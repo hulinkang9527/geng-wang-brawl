@@ -3,10 +3,7 @@
 思路视频.mp3
 analysis_frames/
 
-# 中文方案文档（Jekyll 对非 ASCII 文件名不友好，保留在本地）
-开发方案.md
-
-# GitHub Actions 工作流（本地备用，不随仓库分发）
+# GitHub Actions 工作流（本地与远程由网页维护，避免本地 token 无 workflow scope）
 .github/
 
 # 系统/编辑器
